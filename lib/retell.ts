@@ -11,7 +11,12 @@ export function verifyRetellWebhookSignature(
   apiKey: string,
   signature: string
 ): boolean {
-  return Retell.verify(body, apiKey, signature);
+  try {
+    return Retell.verify(body, apiKey, signature);
+  } catch (error) {
+    console.error("[Retell] Webhook signature verification error:", error);
+    return false;
+  }
 }
 
 export async function getCallDetails(callId: string) {

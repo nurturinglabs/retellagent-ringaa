@@ -25,11 +25,11 @@ export function getRetellCalls() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
-    const signature = req.headers.get("x-retell-signature") || "";
+    const signature = req.headers.get("x-retell-signature");
 
-    // Verify signature
+    // Verify signature when both API key and signature header are present
     const apiKey = process.env.RETELL_API_KEY;
-    if (apiKey) {
+    if (apiKey && signature) {
       const isValid = verifyRetellWebhookSignature(body, apiKey, signature);
       if (!isValid) {
         console.warn("[Retell] Invalid webhook signature");
@@ -38,6 +38,16 @@ export async function POST(req: NextRequest) {
           { status: 401 }
         );
       }
+    } else if (apiKey && !signature) {
+      // No signature header — reject in production, warn in dev
+      if (process.env.NODE_ENV === "production") {
+        console.warn("[Retell] Missing x-retell-signature header");
+        return NextResponse.json(
+          { error: "Missing signature" },
+          { status: 401 }
+        );
+      }
+      console.warn("[Retell] No signature header — skipping verification (dev mode)");
     }
 
     const payload = JSON.parse(body) as RetellWebhookPayload;
