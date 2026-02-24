@@ -49,6 +49,12 @@ export function findLeadByEmail(email: string): Lead | undefined {
   return leads.find((l) => l.parent_email === email);
 }
 
+export function findLeadByPhone(phone: string): Lead | undefined {
+  const normalize = (p: string) => p.replace(/[\s\-()]+/g, "");
+  const target = normalize(phone);
+  return leads.find((l) => l.parent_phone && normalize(l.parent_phone) === target);
+}
+
 // ── Follow-up Templates ──
 export const followUpTemplates: FollowUpTemplate[] = [
   {

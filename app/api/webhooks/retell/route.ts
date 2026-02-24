@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { type RetellWebhookPayload } from "@/lib/retell";
-import { addLead } from "@/lib/store";
+import { addLead, findLeadByPhone, updateLead } from "@/lib/store";
 import { Lead } from "@/lib/types";
 
 // In-memory store for Retell calls (demo — resets on cold start)
@@ -50,32 +50,48 @@ export async function POST(req: NextRequest) {
           created_at: new Date().toISOString(),
         });
 
-        // Create a lead from the call if we have caller info
+        // Check if the agent already created a lead via /api/create-lead during the call.
+        // If so, just attach the transcript. If not, create a minimal lead from phone number.
         if (call.from_number) {
-          const newLead: Lead = {
-            id: `lead_retell_${Date.now().toString(36)}`,
-            parent_name: call.from_number,
-            parent_email: "",
-            parent_phone: call.from_number,
-            child_name: "",
-            child_dob: null,
-            grade_interested: "",
-            current_school: null,
-            status: "new",
-            interest_level: "warm",
-            visit_date: null,
-            visit_time: null,
-            application_started: false,
-            application_progress: 0,
-            conversation_summary:
-              call.call_analysis?.call_summary ||
-              call.transcript?.slice(0, 200) ||
-              "Inbound call via Retell AI",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            follow_ups_sent: [],
-          };
-          addLead(newLead);
+          const existing = findLeadByPhone(call.from_number);
+
+          if (existing) {
+            // Lead was already created by the agent tool — enrich with post-call data
+            updateLead(existing.id, {
+              conversation_summary:
+                call.call_analysis?.call_summary ||
+                existing.conversation_summary,
+              updated_at: new Date().toISOString(),
+            });
+            console.log("[Retell] Updated existing lead:", existing.id);
+          } else {
+            // Agent didn't call create-lead (short call, hang-up, etc.) — create minimal lead
+            const newLead: Lead = {
+              id: `lead_retell_${Date.now().toString(36)}`,
+              parent_name: "",
+              parent_email: "",
+              parent_phone: call.from_number,
+              child_name: "",
+              child_dob: null,
+              grade_interested: "",
+              current_school: null,
+              status: "new",
+              interest_level: "cold",
+              visit_date: null,
+              visit_time: null,
+              application_started: false,
+              application_progress: 0,
+              conversation_summary:
+                call.call_analysis?.call_summary ||
+                call.transcript?.slice(0, 500) ||
+                "Inbound call — details not collected",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              follow_ups_sent: [],
+            };
+            addLead(newLead);
+            console.log("[Retell] Created minimal lead:", newLead.id);
+          }
         }
         break;
 
@@ -91,6 +107,17 @@ export async function POST(req: NextRequest) {
             call.call_analysis?.user_sentiment || existingCall.sentiment;
           existingCall.summary =
             call.call_analysis?.call_summary || existingCall.summary;
+        }
+
+        // Also update the lead's summary if we have better analysis now
+        if (call.from_number && call.call_analysis?.call_summary) {
+          const lead = findLeadByPhone(call.from_number);
+          if (lead) {
+            updateLead(lead.id, {
+              conversation_summary: call.call_analysis.call_summary,
+              updated_at: new Date().toISOString(),
+            });
+          }
         }
         break;
     }

@@ -43,3 +43,4 @@ next-env.d.ts
 # Claude Code instruction files
 CLAUDE_CODE_PRD_RINGAA_RETELL.md
 CLAUDE_CODE_INSTRUCTIONS.md
+RETELL_AGENT_PROMPT.md
