@@ -1,0 +1,210 @@
+{
+  "profile": {
+    "school_name": "Brookfield International School",
+    "address": "No. 42, 2nd Cross, Sahakarnagar Main Road, Sahakarnagar",
+    "city": "Bangalore",
+    "area": "Sahakarnagar",
+    "phone": "+91-80-4567-8900",
+    "email": "admissions@brookfieldschool.edu.in",
+    "website": "https://www.brookfieldschool.edu.in",
+    "board": "CBSE + Cambridge International",
+    "grades_from": "Nursery",
+    "grades_to": "Class 12",
+    "medium": "English",
+    "school_timings": "8:00 AM - 3:00 PM (Mon-Fri)",
+    "principal_name": "Dr. Kavitha Sharma",
+    "established_year": 2005,
+    "total_students": 2400,
+    "campus_size": "5 acres",
+    "student_teacher_ratio": "20:1",
+    "tagline": "Nurturing Global Citizens Since 2005"
+  },
+  "fees": [
+    {
+      "program": "Pre-Primary",
+      "grades": "Nursery, LKG, UKG",
+      "tuition_fee": 95000,
+      "admission_fee": 50000,
+      "annual_charges": 25000,
+      "total_first_year": 170000,
+      "total_subsequent": 120000
+    },
+    {
+      "program": "Primary",
+      "grades": "Grade 1 - 5",
+      "tuition_fee": 120000,
+      "admission_fee": 50000,
+      "annual_charges": 30000,
+      "total_first_year": 200000,
+      "total_subsequent": 150000
+    },
+    {
+      "program": "Middle School",
+      "grades": "Grade 6 - 8",
+      "tuition_fee": 145000,
+      "admission_fee": 50000,
+      "annual_charges": 35000,
+      "total_first_year": 230000,
+      "total_subsequent": 180000
+    },
+    {
+      "program": "Senior School",
+      "grades": "Grade 9 - 12",
+      "tuition_fee": 180000,
+      "admission_fee": 50000,
+      "annual_charges": 40000,
+      "total_first_year": 270000,
+      "total_subsequent": 220000
+    }
+  ],
+  "fee_notes": {
+    "sibling_discount": "10% on tuition for second child",
+    "payment_modes": "Annual, Semi-annual (2% surcharge), Quarterly (5% surcharge)",
+    "late_fee": "Rs. 500 per week after due date",
+    "refund_policy": "Admission fee non-refundable. Tuition refundable with 30-day notice before session start."
+  },
+  "facilities": [
+    {
+      "category": "Academic",
+      "items": [
+        { "name": "Smart Classrooms", "description": "65 classrooms with interactive whiteboards, projectors, and AV systems" },
+        { "name": "Science Labs", "description": "Separate Physics, Chemistry, and Biology labs with modern equipment" },
+        { "name": "Computer Labs", "description": "3 labs with 40 workstations each, high-speed internet" },
+        { "name": "Library", "description": "15,000+ books, digital catalog, reading corners, and Kindle stations" },
+        { "name": "STEM Lab", "description": "Robotics kits, 3D printers, Arduino boards for project-based learning" }
+      ]
+    },
+    {
+      "category": "Sports",
+      "items": [
+        { "name": "Swimming Pool", "description": "25m heated pool with certified coaches" },
+        { "name": "Football Ground", "description": "Full-size FIFA-standard turf ground" },
+        { "name": "Cricket Nets", "description": "4-lane practice nets with bowling machines" },
+        { "name": "Indoor Sports Complex", "description": "Badminton, table tennis, basketball courts" },
+        { "name": "Yoga & Martial Arts Studio", "description": "Dedicated studio for yoga, karate, and taekwondo" }
+      ]
+    },
+    {
+      "category": "Other",
+      "items": [
+        { "name": "Performing Arts Auditorium", "description": "500-seat air-conditioned auditorium with stage and AV" },
+        { "name": "Music Room", "description": "Sound-proofed room with Indian and Western instruments" },
+        { "name": "Art Studio", "description": "Dedicated space for visual arts, pottery, and crafts" },
+        { "name": "Cafeteria", "description": "Nutritionist-planned meals, separate veg and non-veg counters" },
+        { "name": "Medical Room", "description": "Full-time nurse, first aid, and tie-up with Columbia Asia Hospital" }
+      ]
+    }
+  ],
+  "transport": {
+    "overview": "AC school buses covering all major areas of Bangalore. GPS-tracked for parent visibility.",
+    "routes": [
+      { "route_no": "R1", "area": "Whitefield - ITPL - Marathahalli", "stops": 8, "monthly_fee": 4500 },
+      { "route_no": "R2", "area": "Koramangala - HSR Layout - Bellandur", "stops": 7, "monthly_fee": 5000 },
+      { "route_no": "R3", "area": "Indiranagar - CV Raman Nagar - KR Puram", "stops": 6, "monthly_fee": 4000 },
+      { "route_no": "R4", "area": "Hebbal - Sahakarnagar - Yelahanka", "stops": 5, "monthly_fee": 3500 },
+      { "route_no": "R5", "area": "Jayanagar - JP Nagar - Bannerghatta", "stops": 8, "monthly_fee": 5500 },
+      { "route_no": "R6", "area": "Rajajinagar - Malleshwaram - Sadashivanagar", "stops": 6, "monthly_fee": 4500 },
+      { "route_no": "R7", "area": "Electronic City - Bommanahalli", "stops": 5, "monthly_fee": 5000 },
+      { "route_no": "R8", "area": "Banashankari - Kanakapura Road", "stops": 7, "monthly_fee": 5500 }
+    ],
+    "safety_features": [
+      "GPS tracking with live parent app",
+      "CCTV cameras in all buses",
+      "Female attendant on every bus",
+      "Speed governor limited to 40 km/h",
+      "Emergency SOS button"
+    ]
+  },
+  "admission": {
+    "process_steps": [
+      { "step": 1, "title": "Inquiry", "description": "Submit online inquiry form or speak with our AI voice agent" },
+      { "step": 2, "title": "Campus Visit", "description": "Schedule a guided campus tour (Mon-Sat, 9 AM - 4 PM)" },
+      { "step": 3, "title": "Application", "description": "Fill the application form online and pay Rs. 1,500 application fee" },
+      { "step": 4, "title": "Interaction", "description": "Student interaction session (age-appropriate assessment)" },
+      { "step": 5, "title": "Offer Letter", "description": "Admission offer within 5 working days of interaction" },
+      { "step": 6, "title": "Fee Payment", "description": "Pay admission fee within 10 days to confirm seat" },
+      { "step": 7, "title": "Enrollment", "description": "Submit documents and collect welcome kit" }
+    ],
+    "age_criteria": [
+      { "grade": "Nursery", "min_age": "2 years 6 months", "max_age": "3 years 6 months", "as_of": "June 1, 2026" },
+      { "grade": "LKG", "min_age": "3 years 6 months", "max_age": "4 years 6 months", "as_of": "June 1, 2026" },
+      { "grade": "UKG", "min_age": "4 years 6 months", "max_age": "5 years 6 months", "as_of": "June 1, 2026" },
+      { "grade": "Grade 1", "min_age": "5 years 6 months", "max_age": "6 years 6 months", "as_of": "June 1, 2026" }
+    ],
+    "important_dates": {
+      "applications_open": "January 15, 2026",
+      "applications_close": "April 30, 2026",
+      "interaction_sessions": "February - May 2026",
+      "session_starts": "June 10, 2026"
+    }
+  },
+  "documents": {
+    "new_admission": [
+      "Birth Certificate (original + copy)",
+      "Aadhaar Card of child",
+      "Aadhaar Card of both parents",
+      "4 passport-size photos of child",
+      "2 passport-size photos of each parent",
+      "Previous school Transfer Certificate (if applicable)",
+      "Report card of last 2 years (Grade 2+)",
+      "Address proof (Aadhaar / Utility bill)",
+      "Medical fitness certificate",
+      "Blood group report"
+    ],
+    "transfer_admission": [
+      "All documents listed for new admission",
+      "Transfer Certificate from previous school",
+      "Conduct Certificate from previous school",
+      "Migration Certificate (for interstate transfers)",
+      "Mark sheets of last 2 academic years"
+    ],
+    "scholarship": [
+      "Income certificate of parents",
+      "Achievement certificates (sports / academics)",
+      "Recommendation letter from previous school",
+      "Scholarship application form"
+    ]
+  },
+  "faq": [
+    {
+      "question": "What is the admission fee and is it refundable?",
+      "answer": "The admission fee is Rs. 50,000 and is non-refundable. This is a one-time fee paid at the time of enrollment."
+    },
+    {
+      "question": "Do you offer sibling discounts?",
+      "answer": "Yes, we offer a 10% discount on tuition fees for the second child. The discount applies from the year of enrollment of the second child."
+    },
+    {
+      "question": "What curriculum do you follow?",
+      "answer": "We follow CBSE curriculum enriched with Cambridge International elements. Students in Grade 9-12 can opt for Cambridge AS/A Levels alongside CBSE."
+    },
+    {
+      "question": "Is transport available from all parts of Bangalore?",
+      "answer": "We have 8 bus routes covering major areas including Whitefield, Koramangala, HSR Layout, Indiranagar, Hebbal, Jayanagar, Electronic City, and Rajajinagar. All buses are AC with GPS tracking."
+    },
+    {
+      "question": "What is the student-teacher ratio?",
+      "answer": "Our student-teacher ratio is 20:1. For pre-primary sections, we maintain a lower ratio of 15:1 with an additional classroom assistant."
+    },
+    {
+      "question": "Do you have after-school programs?",
+      "answer": "Yes, we offer after-school activities from 3:30 PM to 5:00 PM including robotics, music, dance, art, swimming, and foreign languages (French, German, Japanese)."
+    },
+    {
+      "question": "What safety measures are in place?",
+      "answer": "We have 200+ CCTV cameras, biometric entry for staff, visitor management system, boundary wall with electric fencing, and 24/7 security guards. All buses have GPS tracking and female attendants."
+    },
+    {
+      "question": "Can I visit the school before applying?",
+      "answer": "Absolutely! Campus visits are available Monday to Saturday, 9 AM to 4 PM. You can schedule a visit through our AI voice agent or call the admissions office directly."
+    },
+    {
+      "question": "What if my child needs special attention or has learning differences?",
+      "answer": "We have a dedicated Special Education Needs (SEN) team with 3 trained counselors. Individual Education Plans (IEPs) are created for students who need additional support."
+    },
+    {
+      "question": "When does the academic year start?",
+      "answer": "The academic year starts in June. For 2026-27, the session begins on June 10, 2026. Applications are open from January 15 to April 30, 2026."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "Brookfield International School",
+  "tagline": "Nurturing Global Citizens Since 2005",
+  "location": "Whitefield, Bangalore, Karnataka",
+  "established": 2005,
+  "affiliation": "CBSE + Cambridge International",
+  "total_students": 1200,
+  "student_teacher_ratio": "20:1",
+  "campus_size": "5 acres",
+  "programs": [
+    {
+      "name": "Pre-Primary",
+      "grades": "Nursery, LKG, UKG",
+      "ages": "3-6 years",
+      "curriculum": "Play-based + Montessori",
+      "annual_fee": 120000
+    },
+    {
+      "name": "Primary",
+      "grades": "Grade 1-5",
+      "ages": "6-11 years",
+      "curriculum": "CBSE with Cambridge enrichment",
+      "annual_fee": 150000
+    },
+    {
+      "name": "Middle School",
+      "grades": "Grade 6-8",
+      "ages": "11-14 years",
+      "curriculum": "CBSE + IGCSE preparation",
+      "annual_fee": 180000
+    },
+    {
+      "name": "Senior School",
+      "grades": "Grade 9-12",
+      "ages": "14-18 years",
+      "curriculum": "CBSE + Cambridge AS/A Levels",
+      "annual_fee": 220000
+    }
+  ],
+  "facilities": [
+    "Smart classrooms with interactive boards",
+    "Science & computer labs",
+    "Library with 15,000+ books",
+    "25m swimming pool",
+    "Football & cricket grounds",
+    "Indoor sports complex",
+    "Performing arts auditorium",
+    "Cafeteria with nutritionist-planned meals",
+    "AC school buses covering all major areas",
+    "On-campus medical room with nurse"
+  ],
+  "admission_fee": 50000,
+  "sibling_discount": "10% on tuition",
+  "timings": "8:00 AM - 3:00 PM (Mon-Fri), 8:00 AM - 12:30 PM (Sat - activities only)",
+  "contact": {
+    "phone": "+91-80-4567-8900",
+    "email": "admissions@brookfieldschool.edu.in",
+    "website": "www.brookfieldschool.edu.in"
+  }
+}
