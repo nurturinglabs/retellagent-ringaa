@@ -1,105 +1,235 @@
-# Ringaa - School Admissions Voice Agent (Retell AI Version)
+# Ringaa
 
-Ringaa is an AI-powered voice agent for school admissions. Parents call a phone number and speak with an AI assistant that can answer questions about fees, seat availability, campus facilities, and more. It automatically captures leads and populates a CRM dashboard.
+AI voice agent for school admissions, powered by [Retell AI](https://www.retellai.com/).
+
+Parents call a phone number and speak with an AI assistant that answers questions about fees, seat availability, campus facilities, transport, and more. Every call is automatically captured as a lead and surfaced in an admissions CRM dashboard.
+
+Built for **Brookfield International School** (demo), but the architecture generalizes to any school.
+
+---
 
 ## How It Works
 
-1. Parents call **+1 (262) 384-6288**
-2. Retell AI handles the conversation using a configured agent
-3. The agent can check seat availability, book campus visits, and start applications
-4. All calls are logged and leads are captured automatically
-5. Admissions staff view everything in the dashboard
+```
+Parent dials phone number
+        │
+        ▼
+  Retell AI Agent
+  (handles conversation)
+        │
+        ├──► /api/check-seats      → seat availability lookup
+        ├──► /api/book-visit        → campus visit scheduling + email confirmation
+        └──► /api/start-application → application submission
+        │
+        ▼
+  Call ends → Retell webhook
+        │
+        ▼
+  /api/webhooks/retell
+  (creates lead, stores transcript)
+        │
+        ▼
+  Admin Dashboard
+  (leads, analytics, follow-ups)
+```
+
+1. Parent calls the Ringaa phone number
+2. Retell AI agent conducts the conversation using configured tools
+3. Tools hit the app's API routes to check seats, book visits, or start applications
+4. When the call ends, Retell sends a webhook with the transcript and analysis
+5. The webhook handler creates a lead record automatically
+6. Admissions staff see everything in the dashboard — leads, funnel, analytics
+
+---
 
 ## Tech Stack
 
-- **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4
-- **Voice AI:** Retell AI (phone-based voice agent)
-- **UI Components:** shadcn/ui (Radix UI + Tailwind)
-- **Charts:** Recharts
-- **Email:** Resend
-- **Analytics:** Vercel Analytics + Speed Insights
-- **Date Parsing:** chrono-node
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript, React 19 |
+| Styling | Tailwind CSS 4, shadcn/ui (Radix UI) |
+| Voice AI | Retell AI (phone-based agent) |
+| Charts | Recharts |
+| Email | Resend |
+| Date parsing | chrono-node |
+| Analytics | Vercel Analytics + Speed Insights |
+| Deployment | Vercel |
 
-## Setup
+---
 
-### 1. Prerequisites
+## Getting Started
+
+### Prerequisites
 
 - Node.js 20+
-- Retell AI account with:
-  - API key
-  - Agent ID (configured with school knowledge)
-  - US phone number purchased
+- A [Retell AI](https://www.retellai.com/) account with:
+  - An API key
+  - A configured agent (with school knowledge and tool definitions)
+  - A US phone number purchased and assigned to the agent
+- A [Resend](https://resend.com/) API key (optional, for confirmation emails)
 
-### 2. Environment Variables
+### 1. Clone and install
 
-Copy `.env.example` to `.env.local` and fill in your values:
+```bash
+git clone <repo-url>
+cd retell/ringaa
+npm install
+```
+
+### 2. Configure environment
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required variables:
-- `RETELL_API_KEY` - Your Retell API key
-- `RETELL_AGENT_ID` - Your Retell agent ID
-- `RETELL_PHONE_NUMBER_ID` - Phone number assigned to the agent
-- `RESEND_API_KEY` - For sending confirmation emails
+Edit `.env.local` with your credentials:
 
-### 3. Install & Run
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `RETELL_API_KEY` | Retell API key (from dashboard.retellai.com) | Yes |
+| `RETELL_AGENT_ID` | ID of your configured Retell agent | Yes |
+| `RETELL_PHONE_NUMBER_ID` | Phone number assigned to the agent | Yes |
+| `RESEND_API_KEY` | Resend API key for sending emails | No |
+| `NEXT_PUBLIC_APP_URL` | Base URL of the app | No |
+| `NEXT_PUBLIC_RINGAA_PHONE` | Display-formatted phone number for the UI | No |
+
+### 3. Run locally
 
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the app.
+Open [http://localhost:3000](http://localhost:3000).
 
-### 4. Configure Retell Webhook
+### 4. Connect the webhook
 
-After deploying, set the webhook URL in your Retell dashboard:
+Retell needs a publicly reachable URL to send call events. For local development, use a tunnel:
+
+```bash
+npx ngrok http 3000
+```
+
+Then in the [Retell dashboard](https://dashboard.retellai.com/):
+- Set webhook URL to `https://<your-ngrok-url>/api/webhooks/retell`
+- Set agent tool URLs to:
+  - `https://<your-ngrok-url>/api/check-seats`
+  - `https://<your-ngrok-url>/api/book-visit`
+  - `https://<your-ngrok-url>/api/start-application`
+
+---
+
+## Project Structure
 
 ```
-https://your-domain.vercel.app/api/webhooks/retell
+ringaa/
+├── app/
+│   ├── page.tsx                        # Landing page — phone number CTA
+│   ├── layout.tsx                      # Root layout
+│   ├── globals.css                     # Tailwind + theme variables
+│   ├── (admin)/
+│   │   ├── layout.tsx                  # Sidebar layout for admin pages
+│   │   ├── dashboard/page.tsx          # Admissions overview + funnel
+│   │   ├── leads/page.tsx              # Lead CRM table
+│   │   ├── analytics/page.tsx          # Charts + conversion metrics
+│   │   ├── follow-ups/page.tsx         # Email campaign manager
+│   │   └── knowledge-base/page.tsx     # School info viewer
+│   └── api/
+│       ├── check-seats/route.ts        # Seat availability by grade
+│       ├── book-visit/route.ts         # Campus visit scheduling
+│       ├── start-application/route.ts  # Application submission
+│       ├── leads/route.ts              # Lead listing + filtering
+│       ├── leads/[id]/follow-up/route.ts # Follow-up email sending
+│       ├── seats/route.ts              # All seat data
+│       └── webhooks/retell/route.ts    # Retell webhook handler
+├── components/
+│   ├── call-widget.tsx                 # Phone number display + call button
+│   ├── admin-sidebar.tsx               # Navigation sidebar
+│   ├── analytics-dashboard.tsx         # Charts + metrics component
+│   └── ui/                             # shadcn/ui components
+├── lib/
+│   ├── retell.ts                       # Retell SDK wrapper + types
+│   ├── store.ts                        # In-memory data store
+│   ├── types.ts                        # TypeScript interfaces
+│   └── utils.ts                        # Utility functions
+├── data/
+│   ├── school.json                     # School profile
+│   ├── seats.json                      # Grade-level seat availability
+│   ├── knowledge-base.json             # Fees, facilities, transport, FAQ
+│   └── leads.json                      # Sample lead data
+└── public/                             # Static assets
 ```
 
-This will receive call events (started, ended, analyzed) and create leads automatically.
+---
 
 ## Pages
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page with phone number CTA |
-| `/dashboard` | Admissions overview, stats, funnel |
-| `/leads` | Lead CRM with search, sort, follow-up |
-| `/analytics` | Charts, conversion metrics, seat occupancy |
-| `/follow-ups` | Email template manager and history |
-| `/knowledge-base` | School info used by the AI agent |
+| `/` | Landing page — school info, phone number CTA, "Call Now" button |
+| `/dashboard` | Stats cards, recent leads, seat capacity, admissions funnel |
+| `/leads` | Sortable/filterable lead table, detail panel, follow-up dialog |
+| `/analytics` | Lead volume charts, interest breakdown, conversion insights, seat occupancy |
+| `/follow-ups` | Email templates, send history, campaign stats |
+| `/knowledge-base` | School profile, fees, seats, facilities, transport, admission process, FAQ |
 
-## API Endpoints
+---
+
+## API Reference
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/check-seats` | POST | Check seat availability by grade |
-| `/api/book-visit` | POST | Schedule a campus visit |
-| `/api/start-application` | POST | Submit an application |
-| `/api/leads` | GET | Fetch leads (filter by status/interest) |
-| `/api/seats` | GET | Get all seat availability data |
-| `/api/leads/[id]/follow-up` | POST | Send follow-up email |
-| `/api/webhooks/retell` | POST | Retell webhook handler |
+| `/api/check-seats` | POST | Check availability for a specific grade. Body: `{ "grade": "LKG" }` |
+| `/api/book-visit` | POST | Book a campus visit. Parses natural language dates. |
+| `/api/start-application` | POST | Submit an admission application. |
+| `/api/leads` | GET | List leads. Query params: `?status=new&interest=hot` |
+| `/api/seats` | GET | Get seat availability for all grades. |
+| `/api/leads/[id]/follow-up` | POST | Send a templated follow-up email. Body: `{ "template": "visit_confirmation", "channel": "email" }` |
+| `/api/webhooks/retell` | POST | Receives Retell call events. Verifies signature, creates leads. |
 
-## Deployment (Vercel)
+---
 
-1. Push code to GitHub
-2. Connect repo to Vercel
-3. Set environment variables in Vercel dashboard
-4. Deploy
-5. Set webhook URL in Retell dashboard
+## Deployment
 
-## Key Differences from ElevenLabs Version
+### Vercel
 
-| Feature | ElevenLabs | Retell |
-|---------|------------|--------|
-| Voice delivery | Browser WebRTC | Phone call |
-| User action | Click to talk | Dial phone number |
-| SDK | @elevenlabs/react | retell-sdk |
-| Call tracking | Client-side | Server-side webhooks |
-| Availability | Requires browser | Works from any phone |
+```bash
+npm run build    # verify build passes
+vercel deploy    # or connect GitHub repo in Vercel dashboard
+```
+
+Set all environment variables in Vercel → Project → Settings → Environment Variables.
+
+### Post-deployment
+
+1. Update Retell webhook URL to `https://<your-domain>/api/webhooks/retell`
+2. Update agent tool URLs to point to your production domain
+3. Call the phone number to verify end-to-end flow
+4. Check `/dashboard` for the new lead
+
+---
+
+## Data Storage
+
+The app currently uses an **in-memory store** that resets on every deploy or server restart. This is intentional for demo purposes.
+
+For production, replace `lib/store.ts` with a database-backed implementation (Supabase, PostgreSQL, etc.) — the API routes and types are already structured for this.
+
+---
+
+## School Data (Demo)
+
+The demo is configured for **Brookfield International School**, Bangalore:
+- 15 grades (Nursery through Grade 12)
+- 570 total seats across all grades
+- CBSE + Cambridge International curriculum
+- Fee range: ₹1.2L – ₹2.2L per year
+- 8 transport routes covering major Bangalore areas
+
+All school data lives in `data/` as JSON files and can be swapped for any school.
+
+---
+
+## License
+
+Private. Built by Umesh.
