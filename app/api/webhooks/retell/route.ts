@@ -39,36 +39,91 @@ async function sendPostCallEmail(lead: Lead, callSummary: string | null) {
   const parentName = lead.parent_name || "Parent";
   const childName = lead.child_name || "your child";
   const grade = lead.grade_interested || "the grade you mentioned";
+  const hasVisit = lead.status === "visit_booked" && lead.visit_date;
+
+  // Format visit date nicely if present
+  let visitDateFormatted = "";
+  if (lead.visit_date) {
+    try {
+      visitDateFormatted = new Date(lead.visit_date + "T00:00:00").toLocaleDateString("en-IN", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      visitDateFormatted = lead.visit_date;
+    }
+  }
+
+  const subject = hasVisit
+    ? `Visit Confirmed — ${childName}, Grade ${grade} on ${visitDateFormatted}`
+    : `Thank you for calling Brookfield — ${parentName}`;
+
+  // Build email body based on whether a visit was booked
+  const lines: string[] = [
+    `Hi ${parentName},`,
+    ``,
+  ];
+
+  if (hasVisit) {
+    lines.push(
+      `Your campus visit to Brookfield International School has been confirmed.`,
+      ``,
+      `Visit Details:`,
+      `  Child: ${childName}`,
+      `  Grade: ${grade}`,
+      `  Date: ${visitDateFormatted}`,
+      `  Time: ${lead.visit_time || "10:00 AM"}`,
+      ``,
+      `What to bring:`,
+      `  - Valid photo ID`,
+      `  - Child's previous report card (if available)`,
+      ``,
+      `Location: Brookfield International School, Whitefield, Bangalore`,
+      ``,
+      `If you need to reschedule, please call us at +91-80-4567-8900.`,
+    );
+  } else {
+    lines.push(
+      `Thank you for speaking with our admissions assistant about Brookfield International School.`,
+      ``,
+      `Here's a summary of your call:`,
+      `  Parent: ${parentName}`,
+      `  Child: ${childName}`,
+      `  Grade of Interest: ${grade}`,
+    );
+
+    if (callSummary) {
+      lines.push(``, `Call Summary:`, callSummary);
+    }
+
+    lines.push(
+      ``,
+      `What you can do next:`,
+      `  - Schedule a campus visit (Mon-Fri, 9 AM - 4 PM)`,
+      `  - Start an application online`,
+      `  - Call us again anytime at +91-80-4567-8900`,
+    );
+  }
+
+  lines.push(
+    ``,
+    `We look forward to welcoming ${childName} to Brookfield!`,
+    ``,
+    `Warm regards,`,
+    `Brookfield International School — Admissions Office`,
+  );
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: "Ringaa Admissions <onboarding@resend.dev>",
       to: OVERRIDE_EMAIL,
-      subject: `Thank you for calling Brookfield — ${parentName}`,
-      text: [
-        `Hi ${parentName},`,
-        ``,
-        `Thank you for speaking with our admissions assistant about Brookfield International School.`,
-        ``,
-        `Here's a summary of your call:`,
-        `  Parent: ${parentName}`,
-        `  Child: ${childName}`,
-        `  Grade of Interest: ${grade}`,
-        ...(callSummary ? [``, `Call Summary:`, callSummary] : []),
-        ``,
-        `What you can do next:`,
-        `  - Schedule a campus visit (Mon-Fri, 9 AM - 4 PM)`,
-        `  - Start an application online`,
-        `  - Call us again anytime at +91-80-4567-8900`,
-        ``,
-        `We look forward to welcoming ${childName} to Brookfield!`,
-        ``,
-        `Warm regards,`,
-        `Brookfield International School — Admissions Office`,
-      ].join("\n"),
+      subject,
+      text: lines.join("\n"),
     });
-    console.log("[Retell] Post-call email sent for lead:", lead.id);
+    console.log("[Retell] Post-call email sent for lead:", lead.id, "| visit:", !!hasVisit);
   } catch (err) {
     console.error("[Retell] Failed to send post-call email:", err);
   }
