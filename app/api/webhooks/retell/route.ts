@@ -35,24 +35,59 @@ function detectVisitFromTranscript(
   const text = `${summary || ""} ${transcript}`.toLowerCase();
 
   // Check if a visit was discussed/confirmed in the conversation
-  const visitKeywords = /visit\s+(?:is\s+)?(?:booked|confirmed|scheduled|set)|campus\s+visit.*(?:booked|confirmed|scheduled)|(?:booked|confirmed|scheduled)\s+(?:a\s+)?(?:campus\s+)?visit|see you (?:on|at|tomorrow|next)/i;
+  const visitKeywords = /visit\s+(?:is\s+)?(?:booked|confirmed|scheduled|set)|campus\s+visit.*(?:booked|confirmed|scheduled)|(?:booked|confirmed|scheduled)\s+(?:a\s+)?(?:campus\s+)?visit|see you (?:on|at|tomorrow|next)|i've\s+(?:got|booked)\s+your\s+(?:campus\s+)?visit/i;
   const visitDetected = visitKeywords.test(text);
 
   if (!visitDetected) return { visitDetected: false, visitDate: null, visitTime: null };
 
-  // Try to extract a date from the transcript
+  // Try to extract a date from the transcript using multiple strategies
   let visitDate: string | null = null;
   let visitTime: string | null = null;
 
-  // Look for date near visit-related context
-  const dateContext = transcript.match(
-    /visit.*?(?:on|for|at|scheduled)\s+(.+?)(?:\.|,|!|\?|$)/im
-  );
-  const dateToParse = dateContext?.[1] || summary || "";
+  // Strategy 1: Look for date near visit-related context (single-line match)
+  const datePatterns = [
+    /visit\s+(?:for|on|scheduled\s+for)\s+(.+?)(?:\.|,|!|\?|\n|$)/im,
+    /(?:booked|confirmed|scheduled)\s+.*?(?:for|on)\s+(.+?)(?:\.|,|!|\?|\n|$)/im,
+    /(?:visit|see you)\s+.*?(tomorrow|next\s+\w+day|monday|tuesday|wednesday|thursday|friday)/im,
+  ];
 
-  const parsed = chrono.parseDate(dateToParse, new Date(), { forwardDate: true });
-  if (parsed) {
-    visitDate = parsed.toISOString().split("T")[0];
+  for (const pattern of datePatterns) {
+    const match = transcript.match(pattern);
+    if (match) {
+      const parsed = chrono.parseDate(match[1], new Date(), { forwardDate: true });
+      if (parsed) {
+        visitDate = parsed.toISOString().split("T")[0];
+        console.log("[Retell] Date extracted via pattern:", match[1], "→", visitDate);
+        break;
+      }
+    }
+  }
+
+  // Strategy 2: Fallback — let chrono scan the full transcript for any date
+  // near visit-related sentences
+  if (!visitDate) {
+    const visitSentences = transcript.match(
+      /[^.!?\n]*(?:visit|campus tour|see you)[^.!?\n]*/gi
+    );
+    if (visitSentences) {
+      for (const sentence of visitSentences) {
+        const parsed = chrono.parseDate(sentence, new Date(), { forwardDate: true });
+        if (parsed) {
+          visitDate = parsed.toISOString().split("T")[0];
+          console.log("[Retell] Date extracted via sentence scan:", sentence.trim().slice(0, 80), "→", visitDate);
+          break;
+        }
+      }
+    }
+  }
+
+  // Strategy 3: If summary mentions a date, try that
+  if (!visitDate && summary) {
+    const parsed = chrono.parseDate(summary, new Date(), { forwardDate: true });
+    if (parsed) {
+      visitDate = parsed.toISOString().split("T")[0];
+      console.log("[Retell] Date extracted from summary →", visitDate);
+    }
   }
 
   // Extract time
@@ -61,6 +96,7 @@ function detectVisitFromTranscript(
     visitTime = timeMatch[1].toUpperCase().replace(/\./g, "");
   }
 
+  console.log("[Retell] detectVisitFromTranscript result:", JSON.stringify({ visitDetected, visitDate, visitTime }));
   return { visitDetected, visitDate, visitTime };
 }
 
@@ -78,7 +114,8 @@ async function sendPostCallEmail(lead: Lead, callSummary: string | null) {
   const parentName = lead.parent_name || "Parent";
   const childName = lead.child_name || "your child";
   const grade = lead.grade_interested || "the grade you mentioned";
-  const hasVisit = lead.status === "visit_booked" && lead.visit_date;
+  // Visit is confirmed if status is visit_booked (date is optional — may not always be extracted)
+  const hasVisit = lead.status === "visit_booked";
 
   // Format visit date nicely if present
   let visitDateFormatted = "";
@@ -96,7 +133,9 @@ async function sendPostCallEmail(lead: Lead, callSummary: string | null) {
   }
 
   const subject = hasVisit
-    ? `Visit Confirmed — ${childName}, Grade ${grade} on ${visitDateFormatted}`
+    ? visitDateFormatted
+      ? `Visit Confirmed — ${childName}, Grade ${grade} on ${visitDateFormatted}`
+      : `Visit Confirmed — ${childName}, Grade ${grade}`
     : `Thank you for calling Brookfield — ${parentName}`;
 
   // Build email body based on whether a visit was booked
@@ -112,7 +151,11 @@ async function sendPostCallEmail(lead: Lead, callSummary: string | null) {
       `Visit Details:`,
       `  Child: ${childName}`,
       `  Grade: ${grade}`,
-      `  Date: ${visitDateFormatted}`,
+    );
+    if (visitDateFormatted) {
+      lines.push(`  Date: ${visitDateFormatted}`);
+    }
+    lines.push(
       `  Time: ${lead.visit_time || "10:00 AM"}`,
       ``,
       `What to bring:`,
@@ -310,7 +353,10 @@ export async function POST(req: NextRequest) {
               follow_ups_sent: [],
             };
             addLead(newLead);
-            console.log("[Retell] Created lead from transcript:", newLead.id, "| visit detected:", visitInfo.visitDetected);
+            console.log("[Retell] Created lead from transcript:", newLead.id,
+              "| status:", newLead.status,
+              "| visit_date:", newLead.visit_date,
+              "| visit_time:", newLead.visit_time);
 
             // Send post-call email
             await sendPostCallEmail(newLead, summary);
