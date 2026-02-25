@@ -89,6 +89,21 @@ export async function POST(req: NextRequest) {
     const payload = JSON.parse(body) as RetellWebhookPayload;
     const { event, call } = payload;
 
+    // ── DEBUG: Log the full webhook payload ──
+    console.log("[Retell] ===== WEBHOOK EVENT:", event, "=====");
+    console.log("[Retell] Call ID:", call.call_id);
+    console.log("[Retell] From:", call.from_number);
+    if (call.transcript) {
+      console.log("[Retell] FULL TRANSCRIPT:", call.transcript);
+    }
+    if (call.transcript_object) {
+      console.log("[Retell] TRANSCRIPT TURNS:", JSON.stringify(call.transcript_object));
+    }
+    if (call.call_analysis) {
+      console.log("[Retell] CALL ANALYSIS:", JSON.stringify(call.call_analysis));
+    }
+    // ── END DEBUG ──
+
     switch (event) {
       case "call_started":
         console.log("[Retell] Call started:", call.call_id);
@@ -114,14 +129,12 @@ export async function POST(req: NextRequest) {
           created_at: new Date().toISOString(),
         });
 
-        // Extract caller info from transcript as fallback data
-        const extracted = transcript
-          ? extractCallerInfoFromTranscript(transcript)
+        // Extract caller info from structured turns or flat transcript
+        const extracted = transcript || call.transcript_object
+          ? extractCallerInfoFromTranscript(transcript, call.transcript_object ?? undefined)
           : null;
 
-        if (extracted) {
-          console.log("[Retell] Extracted from transcript:", extracted);
-        }
+        console.log("[Retell] Extracted fields:", JSON.stringify(extracted));
 
         if (call.from_number) {
           const existing = findLeadByPhone(call.from_number);
