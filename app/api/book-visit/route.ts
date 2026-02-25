@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addLead, findLeadByEmail, updateLead } from "@/lib/store";
+import { addLead, findLeadByEmail, findLeadByPhone, updateLead } from "@/lib/store";
 import { Lead } from "@/lib/types";
 import * as chrono from "chrono-node";
 import { Resend } from "resend";
@@ -76,8 +76,10 @@ export async function POST(req: NextRequest) {
   const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
   const timestamp = new Date().toISOString();
 
-  // Check if lead already exists
-  const existingLead = parent_email ? findLeadByEmail(parent_email) : null;
+  // Check if lead already exists (try email first, then phone)
+  const existingLead =
+    (parent_email ? findLeadByEmail(parent_email) : null) ||
+    (parent_phone ? findLeadByPhone(parent_phone) : null);
 
   if (existingLead) {
     updateLead(existingLead.id, {
@@ -86,6 +88,7 @@ export async function POST(req: NextRequest) {
       visit_time: preferred_time,
       updated_at: timestamp,
     });
+    console.log("[book-visit] Updated existing lead:", existingLead.id, "→ visit_booked");
   } else {
     const newLead: Lead = {
       id: `lead_${Date.now().toString(36)}`,

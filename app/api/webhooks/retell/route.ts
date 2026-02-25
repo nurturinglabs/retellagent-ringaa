@@ -214,12 +214,14 @@ export async function POST(req: NextRequest) {
                 updates.grade_interested = extracted.grade_interested;
             }
 
-            updateLead(existing.id, updates);
-            console.log("[Retell] Enriched existing lead:", existing.id);
+            const updatedLead = updateLead(existing.id, updates);
+            console.log("[Retell] Enriched existing lead:", existing.id, "| status:", updatedLead?.status, "| visit:", updatedLead?.visit_date);
 
-            // Send post-call email
-            const enrichedLead = { ...existing, ...updates };
-            await sendPostCallEmail(enrichedLead as Lead, summary);
+            // Re-read from store to get the full current state
+            // (includes visit_booked status set by /api/book-visit during the call)
+            if (updatedLead) {
+              await sendPostCallEmail(updatedLead, summary);
+            }
           } else {
             // Agent didn't call create-lead — build lead from transcript + phone
             const newLead: Lead = {
