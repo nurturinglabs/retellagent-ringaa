@@ -76,24 +76,64 @@ function titleCase(s: string): string {
 }
 
 /**
- * Extract a name-like value from text: 1-3 words, each at least 2 chars.
- * Filters out filler words that voice transcription commonly inserts.
+ * Strip common spoken prefixes from a user reply so we get just the name.
+ * e.g. "Yeah. My name is Mark Webb." → "Mark Webb"
+ *      "It's Priya" → "Priya"
+ *      "His name is Arjun" → "Arjun"
+ */
+function stripNamePrefixes(text: string): string {
+  return text
+    .replace(/[.,!?]/g, "")
+    .replace(
+      /^(?:yeah|yes|sure|okay|ok|um|uh|so|hi|hello|hey)\s*/gi,
+      ""
+    )
+    .replace(
+      /^(?:my name is|i'm|i am|this is|call me|it's|its|it is)\s+/gi,
+      ""
+    )
+    .replace(
+      /^(?:(?:his|her|the|my) (?:name is|child'?s? name is|son'?s? name is|daughter'?s? name is))\s+/gi,
+      ""
+    )
+    .trim();
+}
+
+/**
+ * Extract a name-like value from text.
+ * Accepts 1-3 words including single-letter initials (e.g. "T Webb").
+ * Filters out filler/common words that voice transcription inserts.
  */
 function extractName(text: string): string | null {
-  const cleaned = text
-    .replace(/[.,!?]/g, "")
-    .trim();
-  // Take the first 1-3 consecutive words that look like a name
-  const m = cleaned.match(/([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,}){0,2})/);
+  // First strip spoken prefixes like "Yeah. My name is..."
+  const cleaned = stripNamePrefixes(text);
+  if (!cleaned) return null;
+
+  // Match 1-3 words; allow single letters (for initials like "T") but
+  // require at least one word with 2+ chars to avoid pure noise.
+  const m = cleaned.match(
+    /([a-zA-Z](?:[a-zA-Z]*)(?:\s+[a-zA-Z](?:[a-zA-Z]*)){0,2})/
+  );
   if (!m) return null;
-  const name = m[1];
-  // Filter out common filler
+  const candidate = m[1];
+
+  // Filter out common filler/stop words
   const filler = new Set([
     "yes", "yeah", "sure", "okay", "ok", "um", "uh", "so", "the",
     "its", "is", "my", "for", "and", "that", "this", "actually",
+    "name", "called", "it", "hi", "hello", "hey", "am", "well",
+    "just", "like", "please", "thanks", "thank", "you", "can",
+    "want", "need", "looking", "would", "will", "about", "have",
   ]);
-  const words = name.split(/\s+/).filter((w) => !filler.has(w.toLowerCase()));
+  const words = candidate
+    .split(/\s+/)
+    .filter((w) => !filler.has(w.toLowerCase()));
   if (words.length === 0) return null;
+
+  // Require at least one word with 2+ chars (avoid matching just "I" or "a")
+  const hasSubstantialWord = words.some((w) => w.length >= 2);
+  if (!hasSubstantialWord) return null;
+
   return titleCase(words.join(" "));
 }
 
@@ -132,7 +172,12 @@ export function extractCallerInfoFromTranscript(
         !parent_name &&
         (/your name/.test(q) || /may i (?:know|get|have) your/.test(q) || /who am i speaking/.test(q))
       ) {
-        parent_name = extractName(a);
+        // The user might say "Yeah. My name is Mark Webb." — stripNamePrefixes
+        // inside extractName handles this, but also try the explicit pattern
+        const nameIsMatch = a.match(/(?:my name is|i'm|i am|this is|call me)\s+(.+)/i);
+        parent_name = nameIsMatch
+          ? extractName(nameIsMatch[1])
+          : extractName(a);
       }
 
       // Child name — agent asked about child
@@ -140,7 +185,11 @@ export function extractCallerInfoFromTranscript(
         !child_name &&
         (/child'?s? name/.test(q) || /son'?s? name/.test(q) || /daughter'?s? name/.test(q) || /what is (?:his|her) name/.test(q))
       ) {
-        child_name = extractName(a);
+        // User might say "His name is Arjun" or just "Arjun"
+        const childIsMatch = a.match(/(?:(?:his|her|the|my)\s+)?name is\s+(.+)/i);
+        child_name = childIsMatch
+          ? extractName(childIsMatch[1])
+          : extractName(a);
       }
 
       // Email — agent asked for email

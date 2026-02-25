@@ -184,6 +184,10 @@ export default function LeadsPage() {
           valA = a.child_name.toLowerCase();
           valB = b.child_name.toLowerCase();
           break;
+        case "parent_phone":
+          valA = (a.parent_phone || "").toLowerCase();
+          valB = (b.parent_phone || "").toLowerCase();
+          break;
         case "grade_interested":
           valA = a.grade_interested.toLowerCase();
           valB = b.grade_interested.toLowerCase();
@@ -300,6 +304,7 @@ export default function LeadsPage() {
                     {[
                       { key: "parent_name", label: "Parent" },
                       { key: "child_name", label: "Child" },
+                      { key: "parent_phone", label: "Phone" },
                       { key: "grade_interested", label: "Grade" },
                       { key: "status", label: "Status" },
                       { key: "interest_level", label: "Interest" },
@@ -331,7 +336,7 @@ export default function LeadsPage() {
                   {sortedLeads.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="text-center text-slate-400 py-8"
                       >
                         No leads found in this category
@@ -344,6 +349,9 @@ export default function LeadsPage() {
                           {lead.parent_name}
                         </TableCell>
                         <TableCell>{lead.child_name}</TableCell>
+                        <TableCell className="text-slate-600 text-xs whitespace-nowrap">
+                          {lead.parent_phone || "—"}
+                        </TableCell>
                         <TableCell>{lead.grade_interested}</TableCell>
                         <TableCell>
                           <Badge
@@ -405,6 +413,11 @@ export default function LeadsPage() {
                             {lead.child_name} &middot; Grade{" "}
                             {lead.grade_interested}
                           </p>
+                          {lead.parent_phone && (
+                            <p className="text-xs text-slate-400">
+                              {lead.parent_phone}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           {interestIcons[lead.interest_level]}
