@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   if (!parsed) {
     return NextResponse.json({
       success: false,
-      error: `I couldn't understand the date "${preferred_date}". Could you try saying something like "next Tuesday", "March 5th", or "tomorrow"?`,
+      message: `I couldn't understand the date "${preferred_date}". Could you tell me when you'd like to visit? For example, "tomorrow", "next Tuesday", or "March 5th"?`,
     });
   }
 
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   if (parsed < today) {
     return NextResponse.json({
       success: false,
-      error: "That date seems to be in the past. Could you pick a future date for the visit?",
+      message: "That date seems to be in the past. Could you pick a future date for the visit?",
     });
   }
 
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({
       success: false,
-      error: `Campus visits are available Monday through Friday. The next available weekday would be ${mondayFormatted}. Would that work?`,
+      message: `Campus visits are available Monday through Friday. The next available weekday would be ${mondayFormatted}. Would that work?`,
     });
   }
 
