@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("[create-lead] Request body:", JSON.stringify(body));
 
+    // Retell function nodes wrap params in body.args; inline calls send them at top level
+    const params = body.args || body;
+
     const {
       parent_name,
       child_name,
@@ -19,7 +22,7 @@ export async function POST(req: NextRequest) {
       parent_phone,
       grade_interested,
       current_school,
-    } = body;
+    } = params;
 
     // Validate required fields — return 200 with friendly message (Retell needs 200)
     const missing: string[] = [];

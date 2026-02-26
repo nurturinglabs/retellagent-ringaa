@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("[check-seats] Request body:", JSON.stringify(body));
 
-    const { grade } = body;
+    // Retell function nodes wrap params in body.args; inline calls send them at top level
+    const params = body.args || body;
+    const { grade } = params;
 
     if (!grade) {
       // Return 200 with error message — Retell needs 200 to relay the message

@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   console.log("[book-visit] Request body:", JSON.stringify(body));
 
+  // Retell function nodes wrap params in body.args; inline calls send them at top level
+  const params = body.args || body;
+
   const {
     parent_name,
     parent_email,
@@ -19,7 +22,7 @@ export async function POST(req: NextRequest) {
     grade,
     preferred_date,
     preferred_time = "10:00 AM",
-  } = body;
+  } = params;
 
   if (!parent_name || !child_name || !grade || !preferred_date) {
     const missing = [];
