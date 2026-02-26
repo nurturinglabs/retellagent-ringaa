@@ -7,7 +7,10 @@ import { Resend } from "resend";
 const OVERRIDE_EMAIL = "nurturinglabs@gmail.com";
 
 export async function POST(req: NextRequest) {
+  try {
   const body = await req.json();
+  console.log("[book-visit] Request body:", JSON.stringify(body));
+
   const {
     parent_name,
     parent_email,
@@ -19,9 +22,15 @@ export async function POST(req: NextRequest) {
   } = body;
 
   if (!parent_name || !child_name || !grade || !preferred_date) {
+    const missing = [];
+    if (!parent_name) missing.push("parent name");
+    if (!child_name) missing.push("child name");
+    if (!grade) missing.push("grade");
+    if (!preferred_date) missing.push("preferred date");
+    console.log("[book-visit] Missing fields:", missing.join(", "));
     return NextResponse.json({
       success: false,
-      error: "I need the parent's name, child's name, grade, and a preferred date to book a visit. Could you please provide those?",
+      message: `I need the ${missing.join(", ")} to book a visit. Could you please provide ${missing.length === 1 ? "that" : "those"}?`,
     });
   }
 
@@ -150,6 +159,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  console.log("[book-visit] Booked:", bookingId, "| date:", resolvedDate, "| time:", preferred_time);
+
   return NextResponse.json({
     success: true,
     booking_id: bookingId,
@@ -158,4 +169,11 @@ export async function POST(req: NextRequest) {
     time: preferred_time,
     message: `Campus visit booked for ${resolvedDate} at ${preferred_time}. A confirmation email has been sent. Please bring a valid photo ID.`,
   });
+  } catch (error) {
+    console.error("[book-visit] Error:", error);
+    return NextResponse.json({
+      success: false,
+      message: "I had trouble booking the visit right now. You can call us directly at +91-80-4567-8900 to schedule your campus visit.",
+    });
+  }
 }

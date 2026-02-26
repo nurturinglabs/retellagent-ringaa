@@ -6,7 +6,10 @@ import { Resend } from "resend";
 const OVERRIDE_EMAIL = "nurturinglabs@gmail.com";
 
 export async function POST(req: NextRequest) {
+  try {
   const body = await req.json();
+  console.log("[start-application] Request body:", JSON.stringify(body));
+
   const {
     parent_name,
     parent_email,
@@ -18,10 +21,19 @@ export async function POST(req: NextRequest) {
   } = body;
 
   if (!parent_name || !parent_email || !parent_phone || !child_name || !child_dob || !grade_applying_for) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
+    const missing = [];
+    if (!parent_name) missing.push("parent name");
+    if (!parent_email) missing.push("email");
+    if (!parent_phone) missing.push("phone");
+    if (!child_name) missing.push("child name");
+    if (!child_dob) missing.push("child's date of birth");
+    if (!grade_applying_for) missing.push("grade");
+    console.log("[start-application] Missing fields:", missing.join(", "));
+    // Return 200 with message — Retell needs 200 to relay the message
+    return NextResponse.json({
+      success: false,
+      message: `I need the ${missing.join(", ")} to start the application. Could you please provide ${missing.length === 1 ? "that" : "those"}?`,
+    });
   }
 
   const applicationId = `APP-${Date.now().toString(36).toUpperCase()}`;
@@ -101,9 +113,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  console.log("[start-application] Created:", applicationId);
+
   return NextResponse.json({
     success: true,
     application_id: applicationId,
     message: `Application for ${child_name} in Grade ${grade_applying_for} has been submitted successfully. A confirmation email has been sent.`,
   });
+  } catch (error) {
+    console.error("[start-application] Error:", error);
+    return NextResponse.json({
+      success: false,
+      message: "I had trouble starting the application right now. You can start it online or call us at +91-80-4567-8900 for assistance.",
+    });
+  }
 }
