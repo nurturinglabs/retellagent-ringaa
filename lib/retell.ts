@@ -229,12 +229,19 @@ export function extractCallerInfoFromTranscript(
         }
       }
 
-      // Grade — agent asked about grade
-      // Skip questions about CURRENT grade ("currently in", "right now")
-      // as the user's answer would be their current grade, not the interested one
+      // Grade — agent ASKED about grade (must be a question, not just mentioning grade)
+      // Only trigger when the agent is clearly asking which grade the parent wants.
+      // Do NOT trigger on informational statements like "seats available in Grade 5".
+      // Skip questions about CURRENT grade ("currently in", "right now").
+      const isGradeQuestion =
+        /which (?:grade|class|level)/.test(q) ||
+        /what (?:grade|class|level)/.test(q) ||
+        /(?:grade|class).*(?:interested|looking|applying|want|prefer)/.test(q) ||
+        /looking (?:at|for).*(?:grade|class)/.test(q);
+
       if (
         !grade_interested &&
-        (/grade/.test(q) || /class/.test(q) || /which (?:grade|class|level)/.test(q) || /looking at/.test(q)) &&
+        isGradeQuestion &&
         !/currently/.test(q) && !/right now/.test(q) && !/at the moment/.test(q)
       ) {
         const al = a.toLowerCase();
@@ -250,14 +257,25 @@ export function extractCallerInfoFromTranscript(
         } else if (/pre[\s-]*primary|pre[\s-]*school/.test(al)) {
           grade_interested = "Nursery";
         } else {
-          // Just a number like "5" or "five"
+          // Number words AND ordinals: "five" / "fifth" → "5"
           const numberWords: Record<string, string> = {
-            one: "1", two: "2", three: "3", four: "4", five: "5",
-            six: "6", seven: "7", eight: "8", nine: "9", ten: "10",
-            eleven: "11", twelve: "12",
+            one: "1", first: "1",
+            two: "2", second: "2",
+            three: "3", third: "3",
+            four: "4", fourth: "4",
+            five: "5", fifth: "5",
+            six: "6", sixth: "6",
+            seven: "7", seventh: "7",
+            eight: "8", eighth: "8",
+            nine: "9", ninth: "9",
+            ten: "10", tenth: "10",
+            eleven: "11", eleventh: "11",
+            twelve: "12", twelfth: "12",
           };
           for (const [word, num] of Object.entries(numberWords)) {
-            if (al.includes(word)) {
+            // Use word boundary to avoid matching "ten" inside "Anthony" etc.
+            const wordRegex = new RegExp(`\\b${word}\\b`);
+            if (wordRegex.test(al)) {
               grade_interested = num;
               break;
             }
@@ -269,16 +287,18 @@ export function extractCallerInfoFromTranscript(
         }
       }
 
-      // Grade confirmation — agent confirms "Grade X for [child]" and user says yes
+      // Grade confirmation — agent says "Grade X for [child]" or "availability for Grade X"
+      // and user confirms with yes/okay/ok
       if (
         !grade_interested &&
         agentTurn.role === "agent" &&
         userReply.role === "user"
       ) {
         const userConfirm = a.toLowerCase().trim();
-        const isConfirmation = /^(?:yes|yeah|yep|right|correct|that'?s?\s+(?:right|correct|it)|yup)/.test(userConfirm);
+        const isConfirmation = /^(?:yes|yeah|yep|right|correct|ok|okay|sure|that'?s?\s+(?:right|correct|it)|yup)/.test(userConfirm);
         if (isConfirmation) {
-          const gradeConfirm = agentTurn.content.match(/grade\s+(\d{1,2})\s+for/i);
+          // Match "Grade 5 for you", "Grade 5 for [child]", "in Grade 5", "availability for Grade 5"
+          const gradeConfirm = agentTurn.content.match(/(?:grade|class)\s+(\d{1,2})/i);
           if (gradeConfirm) {
             grade_interested = gradeConfirm[1];
           }
