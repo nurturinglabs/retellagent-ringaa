@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm install)",
       "Bash(npm run build)",
-      "Bash(git log --all --oneline --grep=\"elevenlabs\\\\|eleven\" -i)"
+      "Bash(git log --all --oneline --grep=\"elevenlabs\\\\|eleven\" -i)",
+      "Bash(npx next build)",
+      "Bash(node -e \":*)",
+      "Bash(node -e ':*)",
+      "Bash(node -e 'const q=\"\"what grade is mark currently in\"\";console.log\\(\"\"has grade:\"\",/grade/.test\\(q\\)\\);console.log\\(\"\"has currently:\"\",/currently/.test\\(q\\)\\);console.log\\(\"\"new skip works:\"\",\\(/grade/.test\\(q\\)\\) && \\(!/currently/.test\\(q\\)\\)\\);')",
+      "Bash(node:*)"
     ]
   }
 }

@@ -35,8 +35,23 @@ function detectVisitFromTranscript(
   const text = `${summary || ""} ${transcript}`.toLowerCase();
 
   // Check if a visit was discussed/confirmed in the conversation
-  const visitKeywords = /visit\s+(?:is\s+)?(?:booked|confirmed|scheduled|set)|campus\s+visit.*(?:booked|confirmed|scheduled)|(?:booked|confirmed|scheduled)\s+(?:a\s+)?(?:campus\s+)?visit|see you (?:on|at|tomorrow|next)|i've\s+(?:got|booked)\s+your\s+(?:campus\s+)?visit/i;
-  const visitDetected = visitKeywords.test(text);
+  const visitPatterns = [
+    /visit\s+(?:is\s+)?(?:booked|confirmed|scheduled|set)/i,
+    /(?:booked|confirmed|scheduled)\s+(?:a|your|the)\s+(?:campus\s+)?visit/i,
+    /i've\s+(?:got|booked|scheduled)\s+(?:a|your|the)\s+(?:campus\s+)?visit/i,
+    /(?:scheduled|booked)\s+your\s+(?:campus\s+)?visit\s+for/i,
+    /campus\s+visit\s+for\s+(?:tomorrow|next|monday|tuesday|wednesday|thursday|friday)/i,
+    /see\s+you\s+(?:on|at|tomorrow|next)/i,
+    /looking\s+forward\s+to\s+(?:meeting|seeing)\s+you/i,
+    /we'?re\s+looking\s+forward\s+to\s+meeting/i,
+    /\[booking\s+(?:campus\s+)?visit\]/i,
+    /book\s+that\s+for\s+you/i,
+    /let\s+me\s+book\s+that/i,
+    /(?:your|the)\s+(?:campus\s+)?visit\s+(?:is|has\s+been)/i,
+    /(?:visit|tour)\s+(?:tomorrow|on\s+\w+day)/i,
+    /meeting\s+you\s+(?:and\s+\w+\s+)?tomorrow/i,
+  ];
+  const visitDetected = visitPatterns.some((p) => p.test(text));
 
   if (!visitDetected) return { visitDetected: false, visitDate: null, visitTime: null };
 
@@ -48,7 +63,9 @@ function detectVisitFromTranscript(
   const datePatterns = [
     /visit\s+(?:for|on|scheduled\s+for)\s+(.+?)(?:\.|,|!|\?|\n|$)/im,
     /(?:booked|confirmed|scheduled)\s+.*?(?:for|on)\s+(.+?)(?:\.|,|!|\?|\n|$)/im,
-    /(?:visit|see you)\s+.*?(tomorrow|next\s+\w+day|monday|tuesday|wednesday|thursday|friday)/im,
+    /(?:visit|see you|meeting you)\s+.*?(tomorrow|next\s+\w+day|monday|tuesday|wednesday|thursday|friday)/im,
+    /book\s+that\s+for\s+you\s*[-—]?\s*(tomorrow|next\s+\w+day|monday|tuesday|wednesday|thursday|friday)/im,
+    /(tomorrow)\s+at\s+\d{1,2}/im,
   ];
 
   for (const pattern of datePatterns) {
@@ -67,7 +84,7 @@ function detectVisitFromTranscript(
   // near visit-related sentences
   if (!visitDate) {
     const visitSentences = transcript.match(
-      /[^.!?\n]*(?:visit|campus tour|see you)[^.!?\n]*/gi
+      /[^.!?\n]*(?:visit|campus tour|see you|meeting you|book that)[^.!?\n]*/gi
     );
     if (visitSentences) {
       for (const sentence of visitSentences) {

@@ -213,10 +213,29 @@ export function extractCallerInfoFromTranscript(
         }
       }
 
+      // Email correction — agent confirms email, user says yes/right/correct
+      // Override any previously extracted email with the agent's confirmed version
+      if (parent_email && userReply.role === "user") {
+        const userConfirm = a.toLowerCase().trim();
+        const isConfirmation = /^(?:yes|yeah|yep|right|correct|that'?s?\s+(?:right|correct|it)|yup)/.test(userConfirm);
+        if (isConfirmation) {
+          // Check if the previous agent turn contains a standard email address
+          const agentEmail = agentTurn.content.match(
+            /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+          );
+          if (agentEmail) {
+            parent_email = agentEmail[0].toLowerCase();
+          }
+        }
+      }
+
       // Grade — agent asked about grade
+      // Skip questions about CURRENT grade ("currently in", "right now")
+      // as the user's answer would be their current grade, not the interested one
       if (
         !grade_interested &&
-        (/grade/.test(q) || /class/.test(q) || /which (?:grade|class|level)/.test(q) || /looking at/.test(q))
+        (/grade/.test(q) || /class/.test(q) || /which (?:grade|class|level)/.test(q) || /looking at/.test(q)) &&
+        !/currently/.test(q) && !/right now/.test(q) && !/at the moment/.test(q)
       ) {
         const al = a.toLowerCase();
         const gradeNum = al.match(/(?:grade|class)?\s*(\d{1,2})/);
@@ -249,6 +268,39 @@ export function extractCallerInfoFromTranscript(
           }
         }
       }
+
+      // Grade confirmation — agent confirms "Grade X for [child]" and user says yes
+      if (
+        !grade_interested &&
+        agentTurn.role === "agent" &&
+        userReply.role === "user"
+      ) {
+        const userConfirm = a.toLowerCase().trim();
+        const isConfirmation = /^(?:yes|yeah|yep|right|correct|that'?s?\s+(?:right|correct|it)|yup)/.test(userConfirm);
+        if (isConfirmation) {
+          const gradeConfirm = agentTurn.content.match(/grade\s+(\d{1,2})\s+for/i);
+          if (gradeConfirm) {
+            grade_interested = gradeConfirm[1];
+          }
+        }
+      }
+    }
+
+    // Post-loop: find the LAST properly formatted email in any agent turn.
+    // The agent's final mention is the most reliable (after all corrections).
+    let lastAgentEmail: string | null = null;
+    for (const turn of transcriptObject) {
+      if (turn.role === "agent") {
+        const emails = turn.content.match(
+          /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+        );
+        if (emails) {
+          lastAgentEmail = emails[emails.length - 1].toLowerCase();
+        }
+      }
+    }
+    if (lastAgentEmail) {
+      parent_email = lastAgentEmail;
     }
   }
 
@@ -287,12 +339,13 @@ export function extractCallerInfoFromTranscript(
   }
 
   if (!parent_email) {
-    // Standard email
-    const emailMatch = transcript.match(
-      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+    // Find ALL standard email addresses in the transcript and use the LAST one.
+    // The last one is typically the agent's final confirmed version after corrections.
+    const allEmails = transcript.match(
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
     );
-    if (emailMatch) {
-      parent_email = emailMatch[0].toLowerCase();
+    if (allEmails && allEmails.length > 0) {
+      parent_email = allEmails[allEmails.length - 1].toLowerCase();
     } else {
       // Spoken email: "john at gmail dot com"
       const spokenMatch = transcript.match(
@@ -305,15 +358,31 @@ export function extractCallerInfoFromTranscript(
   }
 
   if (!grade_interested) {
-    const gradeMatch = tl.match(/(?:grade|class)\s+(\d{1,2})/);
-    if (gradeMatch) {
-      grade_interested = gradeMatch[1];
-    } else if (/\bnursery\b/.test(tl)) {
-      grade_interested = "Nursery";
-    } else if (/\blkg\b|l\.?k\.?g/.test(tl)) {
-      grade_interested = "LKG";
-    } else if (/\bukg\b|u\.?k\.?g/.test(tl)) {
-      grade_interested = "UKG";
+    // Prefer grade from agent's confirmation ("Grade 5 for Mark", "seat availability in Grade 5")
+    // over the user's mention (which might be their current grade)
+    const agentGradeConfirm = transcript.match(
+      /Agent:.*?(?:grade|class)\s+(\d{1,2})\s+(?:for|next\s+year|upcoming)/im
+    );
+    if (agentGradeConfirm) {
+      grade_interested = agentGradeConfirm[1];
+    } else {
+      // Fallback: look for "availability for grade X" or "interested in grade X" from user
+      const userGrade = tl.match(/(?:availability\s+(?:for|in)|interested\s+in|looking\s+(?:for|at))\s+(?:grade|class)?\s*(\d{1,2})/);
+      if (userGrade) {
+        grade_interested = userGrade[1];
+      } else {
+        // Last resort: first "grade N" mention
+        const gradeMatch = tl.match(/(?:grade|class)\s+(\d{1,2})/);
+        if (gradeMatch) {
+          grade_interested = gradeMatch[1];
+        } else if (/\bnursery\b/.test(tl)) {
+          grade_interested = "Nursery";
+        } else if (/\blkg\b|l\.?k\.?g/.test(tl)) {
+          grade_interested = "LKG";
+        } else if (/\bukg\b|u\.?k\.?g/.test(tl)) {
+          grade_interested = "UKG";
+        }
+      }
     }
   }
 
